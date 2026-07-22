@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova Interface + Gemini Assistant</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #000814, #000206);
+      color: #ff0066;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      padding: 20px 40px;
+    }
+
+    #orbitCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .dev-signature {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      color: #00f0ff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+      opacity: 0.8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dev-signature::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: #ff0066;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #ff0066;
+    }
+
+    /* Core Glassmorphic Shell */
+    .nova-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: rgba(0, 5, 12, 0.85);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 24px;
+      padding: 30px;
+      text-align: left;
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.15), inset 0 0 20px rgba(0, 240, 255, 0.05);
+      transition: max-width 0.5s cubic-bezier(0.19, 1, 0.22, 1), transform 0.4s ease;
+    }
+
+    /* Dynamic expand mode */
+    .nova-container.full-page-mode {
+      max-width: 1000px;
+    }
+
+    .nova-container h1.main-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      color: #00f0ff;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
+    .nova-container h2.sub-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      color: #ffffff;
+      letter-spacing: 1px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    #intro {
+      font-size: 1rem;
+      color: #b0c4de;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .lang-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: bold;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      letter-spacing: 1px;
+      width: 100%;
+      text-align: center;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .english { 
+      background: transparent; 
+      color: #00f0ff; 
+      border: 1px solid #00f0ff;
+    }
+    .english:hover, .english.active {
+      background: #00f0ff;
+      color: #000;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    .hindi { 
+      background: transparent; 
+      color: #ff0066; 
+      border: 1px solid #ff0066;
+    }
+    .hindi:hover, .hindi.active {
+      background: #ff0066;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(255, 0, 102, 0.4);
+    }
+
+    .speak-btn { 
+      background: linear-gradient(135deg, #00f0ff, #7000ff); 
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(112, 0, 255, 0.3);
+    }
+
+    #status {
+      font-size: 0.9rem;
+      color: #ffea00;
+      margin-bottom: 10px;
+    }
+
+    /* Dashboard Grid Styles */
+    .city-dashboard-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .dashboard-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .dashboard-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: #00f0ff;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      padding-bottom: 5px;
+    }
+
+    .dashboard-card ul {
+      list-style: none;
+      line-height: 1.6;
+    }
+
+    .dashboard-card ul li {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      margin-bottom: 12px;
+    }
+
+    .dashboard-card ul li strong {
+      color: #ff0066;
+      display: block;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-top: 20px;
+      max-width: 150px;
+    }
+
+    /* Responsive Mobile Sheet */
+    @media (max-width: 850px) {
+      body {
+        padding: 0;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .nova-container {
+        max-width: 100vw;
+        border-radius: 24px 24px 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        padding: 20px;
+        max-height: 88vh;
+        overflow-y: auto;
+      }
+
+      .nova-container.full-page-mode {
+        max-width: 100vw;
+      }
+
+      .control-panel {
+        flex-direction: row;
+      }
+
+      .lang-row {
+        flex: 1;
+      }
+
+      .speak-btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="orbitCanvas"></canvas>
+
+  <div class="nova-container" id="mainContainer">
+    <div class="dev-signature">SYSTEM ACCESS // SHIVAM SINGH</div>
+
+  <!-- Default Landing Interface -->
+<div id="landingView">
+  <h1 class="main-title">👋 Hi, I am NOVA</h1>
+  <h2 class="sub-title">Welcome to NOVA Neural Intelligence Hub<br><span style="color:#ff0066">Created by Shivam Nexo</span></h2>
+  <p id="intro">I am your smart AI voice assistant created by Shivam Nexo. Click speak and ask me anything in English or Hindi.</p>
+
+  <div class="control-panel">
+    <div class="lang-row">
+      <button class="english active" id="btnEn" onclick="setLanguage('en')">English</button>
+      <button class="hindi" id="btnHi" onclick="setLanguage('hi')">हिंदी</button>
+    </div>
+    <button class="speak-btn" onclick="startListening()">🎤 Speak Target</button>
+  </div>
+
+  <p id="status">System Ready</p>
+</div>
+
+    <!-- Gemini Live Output Dashboard -->
+    <div id="cityDashboard" style="display: none;">
+      <h1 class="main-title" id="dashCityName">LOCATION NODE</h1>
+      <p id="statusDashboard" style="color: #ffea00; margin-bottom: 15px;">📊 Dynamic Data Matrix Loaded</p>
+      
+      <<div class="city-dashboard-view">
+  <div class="dashboard-card">
+    <h3>💡 Key Highlights & Insights</h3>
+    <ul id="listTourism"></ul>
+  </div>
+
+  <div class="dashboard-card">
+    <h3>⚡ Core Details & Overview</h3>
+    <ul id="listHospitals"></ul>
+  </div>
+
+  <div class="dashboard-card">
+    <h3>📌 Recommendations & Resources</h3>
+    <ul id="listNeeds"></ul>
+  </div>
+</div>
+
+      <button class="back-btn" onclick="returnToMenu()">⬅ Back</button>
+    </div>
+
+  </div>
+
+  <script>
+    // ============================================================================
+    // PASTE YOUR GEMINI API KEY HERE
+    // ============================================================================
+    const GEMINI_API_KEY = "AQ.Ab8RN6Lxkuru7sW2d6DyxUDLPEh1CEDwIfmIazLUu48hBeRUUA";
+    // ============================================================================
+
+    // --- Dynamic Adaptive Canvas Render Engine ---
+    const canvas = document.getElementById('orbitCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let cx, cy;
+      
+      if (window.innerWidth > 850) {
+        const isFullPage = document.getElementById("mainContainer").classList.contains("full-page-mode");
+        cx = isFullPage ? (window.innerWidth + 850) / 2 : (window.innerWidth + 440) / 2;
+        cy = window.innerHeight / 2;
+      } else {
+        cx = window.innerWidth / 2;
+        cy = window.innerHeight * 0.20; 
+      }
+      
+      const time = Date.now() * 0.002;
+      const ringScale = window.innerWidth > 850 ? 50 : 28;
+
+      for (let i = 1; i <= 5; i++) {
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.12)";
+        ctx.lineWidth = 1;
+        ctx.arc(cx, cy, i * ringScale, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 10; i++) {
+        const angle = time + i * (Math.PI * 2 / 10);
+        const radius = ringScale * 4;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        
+        ctx.beginPath();
+        ctx.fillStyle = "#00f0ff";
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const centerRadius = window.innerWidth > 850 ? 25 : 14; 
+      const moveRadius = window.innerWidth > 850 ? 35 : 12;   
+      const centerX = cx + Math.cos(time * 1.5) * moveRadius;
+      const centerY = cy + Math.sin(time * 1.5) * moveRadius;
+      
+      ctx.beginPath();
+      ctx.fillStyle = "#00ffff";
+      ctx.shadowColor = "#00ffff";
+      ctx.shadowBlur = 25; 
+      ctx.arc(centerX, centerY, centerRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // ----------------- NOVA Assistant Data Logic -----------------
+    let lang = "en";
+    let hasGreeted = false; 
+    let isProcessing = false;
+
+    function speakText(text, language="en-US") {
+      window.speechSynthesis.cancel(); 
+      let speech = new SpeechSynthesisUtterance(text);
+      speech.lang = language;
+      window.speechSynthesis.speak(speech);
+    }
+
+    function triggerGreetingSound() {
+      if (!hasGreeted) {
+        speakText("Hello Shivam, I am your assistant Marco. Tell me any topic or place name to get information .", "en-US");
+        hasGreeted = true;
+        return true;
+      }
+      return false;
+    }
+
+    function setLanguage(language) {
+      const greetingFired = triggerGreetingSound();
+      lang = language;
+      document.getElementById("btnEn").classList.remove("active");
+      document.getElementById("btnHi").classList.remove("active");
+      
+      if (lang === "en") {
+        document.getElementById("btnEn").classList.add("active");
+        document.getElementById("status").innerText = "Mode Status: English Connected";
+        if (!greetingFired) {
+          speakText("You selected English. Now, click on spek and ask anything");
+        }
+      } else {
+        document.getElementById("btnHi").classList.add("active");
+        document.getElementById("status").innerText = "मोड स्टेटस: हिंदी कनेक्टेड";
+        if (!greetingFired) {
+speakText("आपने हिंदी चुनी है। अब आप स्पीक पर क्लिक करें और कुछ भी पूछें।", "hi-IN");        }
+      }
+    }
+
+    function startListening() {
+      if (isProcessing) return;
+      triggerGreetingSound(); 
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        document.getElementById("status").innerText = "⚠️ Speech Recognition is not supported in this browser.";
+        return;
+      }
+
+      let recognition = new SpeechRecognition();
+      recognition.lang = lang === "en" ? "en-US" : "hi-IN";
+      recognition.start();
+
+      document.getElementById("status").innerText = "🎤 Listening...";
+
+      recognition.onresult = function(event) {
+        let transcript = event.results[0][0].transcript.trim();
+        document.getElementById("status").innerText = `🔍 Searching for "${transcript}"...`;
+        fetchCityDataFromGemini(transcript);
+      };
+
+      recognition.onerror = function(event) {
+        document.getElementById("status").innerText = `⚠️ Voice Error: ${event.error}`;
+      };
+    }
+
+    // --- GEMINI API INTEGRATION LAYER ---
+    async function fetchCityDataFromGemini(userQuery) {
+      const statusEl = document.getElementById("status");
+
+      if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+        statusEl.innerText = "⚠️ Missing Gemini API Key! Please paste it in GEMINI_API_KEY.";
+        return;
+      }
+
+      isProcessing = true;
+      const isHindi = lang === "hi";
+
+      const systemPrompt = `
+  You are NOVA, an intelligent AI guide created by Shivam Nexo. The user asks: "${userQuery}".
+  Provide response details in ${isHindi ? "Hindi" : "English"}.
+  
+  If the user asks for photos, images, or places to see (e.g. "photo chahiye", "show images"):
+  Include a styled HTML link/button in the response that leads to Google Images search or Google Maps photos for that location.
+  Example link format: <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(userQuery)}" target="_blank" class="nova-btn" style="color:#00f0ff; font-weight:bold; text-decoration:none;">📷 View Photos on Google Images</a>
+  
+  Return a STRICT JSON object with these EXACT key names:
+  1. "cityName": Upper case main subject/location title (e.g. "PATNA PHOTOS & DETAILS").
+  2. "tourism": HTML string containing <li> tags with <strong>Title</strong>, brief details, and photo search links if requested.
+  3. "hospitals": HTML string containing <li> tags for Core Information or Emergency Details.
+  4. "needs": HTML string containing <li> tags for Useful Links & Transit Essentials.
+  5. "spokenSummary": A concise 2-sentence summary suitable to be read aloud (e.g. "यहाँ पटना की तस्वीरें देखने के लिए लिंक दिया गया है...").
+`;
+
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: `Provide detailed structured guide for query: ${userQuery}` }]
+          }
+        ],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              cityName: { type: "STRING" },
+              tourism: { type: "STRING" },
+              hospitals: { type: "STRING" },
+              needs: { type: "STRING" },
+              spokenSummary: { type: "STRING" }
+            },
+            required: ["cityName", "tourism", "hospitals", "needs", "spokenSummary"]
+          }
+        }
+      };
+
+      // Array of production Gemini models to cycle through
+      const modelsToTry = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
+      let success = false;
+      let lastErrorMessage = "";
+
+      for (let modelName of modelsToTry) {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "x-goog-api-key": GEMINI_API_KEY
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawText) {
+              const parsedData = JSON.parse(rawText);
+              openFullCityPage(parsedData);
+              success = true;
+              break;
+            }
+          } else {
+            const errRes = await response.json().catch(() => ({}));
+            lastErrorMessage = errRes.error?.message || `HTTP ${response.status}`;
+          }
+        } catch (err) {
+          lastErrorMessage = err.message;
+        }
+      }
+
+      if (!success) {
+        statusEl.innerText = `⚠️ Connection error: ${lastErrorMessage}`;
+      }
+
+      isProcessing = false;
+    }
+
+    function openFullCityPage(data) {
+      // Speak audio summary
+      speakText(data.spokenSummary, lang === "en" ? "en-US" : "hi-IN");
+
+      // Switch views
+      document.getElementById("mainContainer").classList.add("full-page-mode");
+      document.getElementById("landingView").style.display = "none";
+      document.getElementById("cityDashboard").style.display = "block";
+
+      // Inject data into HTML targets
+      document.getElementById("dashCityName").innerText = data.cityName;
+      document.getElementById("listTourism").innerHTML = data.tourism;
+      document.getElementById("listHospitals").innerHTML = data.hospitals;
+      document.getElementById("listNeeds").innerHTML = data.needs;
+    }
+
+    function returnToMenu() {
+      window.speechSynthesis.cancel();
+      document.getElementById("mainContainer").classList.remove("full-page-mode");
+      document.getElementById("cityDashboard").style.display = "none";
+      document.getElementById("landingView").style.display = "block";
+      document.getElementById("status").innerText = "System Ready";
+    }
+  </script>
+
+</body>
+</html>
