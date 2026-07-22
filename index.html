@@ -213,6 +213,25 @@
       display: block;
     }
 
+    .nova-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 8px 14px;
+      border: 1px solid #00f0ff;
+      border-radius: 6px;
+      background: rgba(0, 240, 255, 0.1);
+      color: #00f0ff !important;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .nova-btn:hover {
+      background: #00f0ff;
+      color: #000 !important;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
     .back-btn {
       background: rgba(255, 255, 255, 0.1);
       color: #ffffff;
@@ -265,44 +284,44 @@
   <div class="nova-container" id="mainContainer">
     <div class="dev-signature">SYSTEM ACCESS // SHIVAM SINGH</div>
 
-  <!-- Default Landing Interface -->
-<div id="landingView">
-  <h1 class="main-title">👋 Hi, I am NOVA</h1>
-  <h2 class="sub-title">Welcome to NOVA Neural Intelligence Hub<br><span style="color:#ff0066">Created by Shivam Nexo</span></h2>
-  <p id="intro">I am your smart AI voice assistant created by Shivam Nexo. Click speak and ask me anything in English or Hindi.</p>
+    <!-- Default Landing Interface -->
+    <div id="landingView">
+      <h1 class="main-title">👋 Hi, I am NOVA</h1>
+      <h2 class="sub-title">Welcome to NOVA Neural Intelligence Hub<br><span style="color:#ff0066">Created by Shivam Nexo</span></h2>
+      <p id="intro">I am your smart AI voice assistant created by Shivam Nexo. Click speak and ask me anything in English or Hindi.</p>
 
-  <div class="control-panel">
-    <div class="lang-row">
-      <button class="english active" id="btnEn" onclick="setLanguage('en')">English</button>
-      <button class="hindi" id="btnHi" onclick="setLanguage('hi')">हिंदी</button>
+      <div class="control-panel">
+        <div class="lang-row">
+          <button class="english active" id="btnEn" onclick="setLanguage('en')">English</button>
+          <button class="hindi" id="btnHi" onclick="setLanguage('hi')">हिंदी</button>
+        </div>
+        <button class="speak-btn" onclick="startListening()">🎤 Speak Target</button>
+      </div>
+
+      <p id="status">System Ready</p>
     </div>
-    <button class="speak-btn" onclick="startListening()">🎤 Speak Target</button>
-  </div>
-
-  <p id="status">System Ready</p>
-</div>
 
     <!-- Gemini Live Output Dashboard -->
     <div id="cityDashboard" style="display: none;">
       <h1 class="main-title" id="dashCityName">LOCATION NODE</h1>
       <p id="statusDashboard" style="color: #ffea00; margin-bottom: 15px;">📊 Dynamic Data Matrix Loaded</p>
       
-      <<div class="city-dashboard-view">
-  <div class="dashboard-card">
-    <h3>💡 Key Highlights & Insights</h3>
-    <ul id="listTourism"></ul>
-  </div>
+      <div class="city-dashboard-view">
+        <div class="dashboard-card">
+          <h3>💡 Key Highlights & Insights</h3>
+          <ul id="listTourism"></ul>
+        </div>
 
-  <div class="dashboard-card">
-    <h3>⚡ Core Details & Overview</h3>
-    <ul id="listHospitals"></ul>
-  </div>
+        <div class="dashboard-card">
+          <h3>⚡ Core Details & Overview</h3>
+          <ul id="listHospitals"></ul>
+        </div>
 
-  <div class="dashboard-card">
-    <h3>📌 Recommendations & Resources</h3>
-    <ul id="listNeeds"></ul>
-  </div>
-</div>
+        <div class="dashboard-card">
+          <h3>📌 Recommendations & Resources</h3>
+          <ul id="listNeeds"></ul>
+        </div>
+      </div>
 
       <button class="back-btn" onclick="returnToMenu()">⬅ Back</button>
     </div>
@@ -310,11 +329,23 @@
   </div>
 
   <script>
-    // ============================================================================
-    // PASTE YOUR GEMINI API KEY HERE
-    // ============================================================================
-    const GEMINI_API_KEY = "QVEuQWI4Uk42SWUxVEdYSnZiV3JPSlE0VGQ4Z0pfN1R3dVZRTWU5WnYweGx5TWRiWlZpSXcK";
-    // ============================================================================
+    // Retrieve API Key from browser local storage
+    let GEMINI_API_KEY = localStorage.getItem("NOVA_GEMINI_KEY");
+
+    // If no key is found, prompt the user once
+    if (!GEMINI_API_KEY) {
+      GEMINI_API_KEY = prompt("Enter your Gemini API Key to activate NOVA:");
+      if (GEMINI_API_KEY) {
+        GEMINI_API_KEY = GEMINI_API_KEY.trim();
+        localStorage.setItem("NOVA_GEMINI_KEY", GEMINI_API_KEY);
+      }
+    }
+
+    // Helper: Reset/update key anytime from browser console via resetApiKey()
+    function resetApiKey() {
+      localStorage.removeItem("NOVA_GEMINI_KEY");
+      location.reload();
+    }
 
     // --- Dynamic Adaptive Canvas Render Engine ---
     const canvas = document.getElementById('orbitCanvas');
@@ -394,7 +425,7 @@
 
     function triggerGreetingSound() {
       if (!hasGreeted) {
-        speakText("Hello Shivam, I am your assistant Marco. Tell me any topic or place name to get information .", "en-US");
+        speakText("Hello Shivam, I am your assistant Marco. Tell me any topic or place name to get information.", "en-US");
         hasGreeted = true;
         return true;
       }
@@ -411,13 +442,14 @@
         document.getElementById("btnEn").classList.add("active");
         document.getElementById("status").innerText = "Mode Status: English Connected";
         if (!greetingFired) {
-          speakText("You selected English. Now, click on spek and ask anything");
+          speakText("You selected English. Now, click on speak and ask anything");
         }
       } else {
         document.getElementById("btnHi").classList.add("active");
         document.getElementById("status").innerText = "मोड स्टेटस: हिंदी कनेक्टेड";
         if (!greetingFired) {
-speakText("आपने हिंदी चुनी है। अब आप स्पीक पर क्लिक करें और कुछ भी पूछें।", "hi-IN");        }
+          speakText("आपने हिंदी चुनी है। अब आप स्पीक पर क्लिक करें और कुछ भी पूछें।", "hi-IN");
+        }
       }
     }
 
@@ -452,8 +484,8 @@ speakText("आपने हिंदी चुनी है। अब आप स
     async function fetchCityDataFromGemini(userQuery) {
       const statusEl = document.getElementById("status");
 
-      if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-        statusEl.innerText = "⚠️ Missing Gemini API Key! Please paste it in GEMINI_API_KEY.";
+      if (!GEMINI_API_KEY) {
+        statusEl.innerText = "⚠️ Missing Gemini API Key! Please refresh to enter your key.";
         return;
       }
 
@@ -466,14 +498,14 @@ speakText("आपने हिंदी चुनी है। अब आप स
   
   If the user asks for photos, images, or places to see (e.g. "photo chahiye", "show images"):
   Include a styled HTML link/button in the response that leads to Google Images search or Google Maps photos for that location.
-  Example link format: <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(userQuery)}" target="_blank" class="nova-btn" style="color:#00f0ff; font-weight:bold; text-decoration:none;">📷 View Photos on Google Images</a>
+  Example link format: <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(userQuery)}" target="_blank" class="nova-btn">📷 View Photos on Google Images</a>
   
   Return a STRICT JSON object with these EXACT key names:
   1. "cityName": Upper case main subject/location title (e.g. "PATNA PHOTOS & DETAILS").
   2. "tourism": HTML string containing <li> tags with <strong>Title</strong>, brief details, and photo search links if requested.
   3. "hospitals": HTML string containing <li> tags for Core Information or Emergency Details.
   4. "needs": HTML string containing <li> tags for Useful Links & Transit Essentials.
-  5. "spokenSummary": A concise 2-sentence summary suitable to be read aloud (e.g. "यहाँ पटना की तस्वीरें देखने के लिए लिंक दिया गया है...").
+  5. "spokenSummary": A concise 2-sentence summary suitable to be read aloud (e.g. "Here are details and photos for Patna.").
 `;
 
       const payload = {
@@ -500,19 +532,18 @@ speakText("आपने हिंदी चुनी है। अब आप स
         }
       };
 
-      // Array of production Gemini models to cycle through
-      const modelsToTry = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
+      // Standard active Gemini production models fallback list
+      const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
       let success = false;
       let lastErrorMessage = "";
 
       for (let modelName of modelsToTry) {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
         try {
           const response = await fetch(endpoint, {
             method: "POST",
             headers: { 
-              "Content-Type": "application/json",
-              "x-goog-api-key": GEMINI_API_KEY
+              "Content-Type": "application/json"
             },
             body: JSON.stringify(payload)
           });
