@@ -328,7 +328,7 @@
 
   </div>
 
-  <script>
+ <script>
     // Retrieve API Key from browser local storage
     let GEMINI_API_KEY = localStorage.getItem("NOVA_GEMINI_KEY");
 
@@ -532,8 +532,8 @@
         }
       };
 
-      // Standard active Gemini production models fallback list
-const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"];
+      // Active production models list (Removed gemini-2.0-flash to prevent quota block)
+      const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash"];
       let success = false;
       let lastErrorMessage = "";
 
@@ -560,6 +560,11 @@ const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
           } else {
             const errRes = await response.json().catch(() => ({}));
             lastErrorMessage = errRes.error?.message || `HTTP ${response.status}`;
+            
+            // Wait 2 seconds if rate limit/quota error before trying fallback model
+            if (response.status === 429) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
           }
         } catch (err) {
           lastErrorMessage = err.message;
@@ -567,7 +572,11 @@ const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
       }
 
       if (!success) {
-        statusEl.innerText = `⚠️ Connection error: ${lastErrorMessage}`;
+        if (lastErrorMessage.toLowerCase().includes("quota") || lastErrorMessage.includes("429")) {
+          statusEl.innerText = "⏳ Free quota limit reached. Please wait ~30 seconds and try again!";
+        } else {
+          statusEl.innerText = `⚠️ Connection error: ${lastErrorMessage}`;
+        }
       }
 
       isProcessing = false;
@@ -596,7 +605,6 @@ const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
       document.getElementById("landingView").style.display = "block";
       document.getElementById("status").innerText = "System Ready";
     }
-  </script>
-
-</body>
-</html>
+</script>
+<body/>
+  <html/>
